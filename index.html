@@ -1,0 +1,74 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>ElmHub</title>
+  <script type="text/javascript" src="/main.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/4.1.3/firebase.js"></script>
+
+  </head>
+
+<body>
+  <div id="elm-flatris"></div>
+</body>
+<script type="text/javascript">
+
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDHTw9b9CaeWiWGc20Lt8WrZwzWJavhDv4",
+    authDomain: "flatris-multiplayer.firebaseapp.com",
+    databaseURL: "https://flatris-multiplayer.firebaseio.com",
+    projectId: "flatris-multiplayer",
+    storageBucket: "flatris-multiplayer.appspot.com",
+    messagingSenderId: "1076654799758"
+  };
+  firebase.initializeApp(config);
+
+
+  // documentation: https://github.com/michael/github
+  //var github = new Github();
+
+  var app = Elm.Main.embed(document.getElementById("elm-flatris"));
+  var channel = firebase.database().ref('flatris/');
+
+  channel.on('value', function(data) {
+    onStateChanged(data.val());
+  });
+
+  function setState(state) {
+    console.log("setState", state);
+
+    channel.set({
+      state: state
+     
+    });
+  }
+  function onStateChanged(state){
+    console.log("onStateChanged", state.state);
+    //alert(state.state)
+    //if(state.state=="paused")
+      app.ports.onStateChanged.send(state.state);
+      //console.log("State to write", state);
+  }
+  function checkState(){
+    //alert(state.state)
+    //if(state.state=="paused")
+    channel.once('value').then(function(data){
+      //alert(data.val().state)
+      console.log("checkState", data.val().state);
+      if (data.val().state == "waiting")
+        app.ports.responseCheckState.send(true);
+      else
+        app.ports.responseCheckState.send(false);
+    });
+      
+      //console.log("State to write", state);
+  }
+
+  app.ports.setState.subscribe(setState);
+  app.ports.checkState.subscribe(checkState);
+  //app.ports.setReady.subscribe(setReady);
+</script>
+
+</html>
